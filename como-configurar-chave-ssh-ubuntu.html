@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO e Metadados -->
+  <title>Como Configurar Autenticação por Chave SSH e Desativar Login por Senha no Ubuntu - GuiaSysAdmin</title>
+  <meta name="description" content="Aprenda a proteger seu servidor Linux Ubuntu configurando autenticação via chave pública SSH e desativando o acesso por senha passo a passo sem riscos.">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Como Configurar Autenticação por Chave SSH no Ubuntu">
+  <meta property="og:description" content="Guia prático de segurança no Linux SysAdmin para proteger seu servidor contra ataques de força bruta.">
+  <meta property="og:url" content="https://guiasysadmin.com.br/sysadmin/como-configurar-chave-ssh-ubuntu.html">
+
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #212529;
+      --primary-color: #2b5c8f;
+      --accent-color: #0076d6;
+      --code-bg: #1e1e1e;
+      --code-text: #d4d4d4;
+      --border-color: #e9ecef;
+      --max-width: 1100px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    /* Header e Navegação */
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 0;
+    }
+    .header-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .logo a {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 1.5rem;
+    }
+    nav a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover { color: var(--accent-color); }
+
+    /* Layout Principal */
+    .layout-container {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 2rem;
+    }
+
+    /* Conteúdo do Artigo */
+    article {
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    article h1 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-color); }
+    .meta-info { font-size: 0.875rem; color: #6c757d; margin-bottom: 1.5rem; }
+    article h2 { font-size: 1.4rem; margin: 2rem 0 0.8rem; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem; }
+    article p { margin-bottom: 1.2rem; }
+    article ul, article ol { margin: 0 0 1.2rem 1.5rem; }
+    article li { margin-bottom: 0.4rem; }
+
+    /* Alertas e Caixas de Destaque */
+    .alert-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      color: #856404;
+      padding: 1.2rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .tip-box {
+      background-color: #eef5fc;
+      border-left: 4px solid var(--primary-color);
+      padding: 1.2rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Blocos de Código e Terminal */
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 1.2rem;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.95rem;
+    }
+    code { font-family: "Courier New", Courier, monospace; background: #e9ecef; padding: 0.2rem 0.4rem; border-radius: 4px; color: #d63384; }
+    pre code { background: none; padding: 0; color: inherit; }
+
+    /* Espaços de Anúncio AdSense */
+    .adsense-unit {
+      background-color: #f1f3f5;
+      border: 1px dashed #adb5bd;
+      text-align: center;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    /* Sidebar */
+    aside { display: flex; flex-direction: column; gap: 1.5rem; }
+    .widget {
+      background: var(--card-bg);
+      padding: 1.2rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .widget h3 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--primary-color); }
+    .widget ul { list-style: none; }
+    .widget li { margin-bottom: 0.6rem; }
+    .widget a { color: var(--text-color); text-decoration: none; }
+    .widget a:hover { color: var(--accent-color); }
+
+    /* Rodapé */
+    footer {
+      background: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+    .footer-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .footer-links { margin-bottom: 1rem; }
+    .footer-links a { color: var(--text-color); text-decoration: none; margin: 0 0.5rem; }
+
+    @media (max-width: 768px) {
+      .layout-container { grid-template-columns: 1fr; }
+      .header-container { flex-direction: column; gap: 1rem; text-align: center; }
+      article { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="/">GuiaSysAdmin</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="/">Início</a></li>
+          <li><a href="/sysadmin/">SysAdmin</a></li>
+          <li><a href="/cli/">CLI</a></li>
+          <li><a href="/sobre.html">Sobre</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <main>
+      <article>
+        <header>
+          <h1>Como Configurar Autenticação por Chave SSH e Desativar Login por Senha no Ubuntu</h1>
+          <div class="meta-info">
+            Publicado em <time datetime="2026-10-15">15 de Outubro de 2026</time> | Por <span>José Ronaldo</span> | Categoria: <em>SysAdmin / Segurança</em>
+          </div>
+        </header>
+
+        <!-- Anúncio AdSense Topo -->
+        <div class="adsense-unit">
+          [ Espaço reservado para anúncio do Google AdSense - Topo do Artigo ]
+        </div>
+
+        <p>Ao expor um servidor Ubuntu para a internet na porta padrão (22), ele se torna alvo instantâneo de botnets automatizadas executando varreduras de dicionário e ataques de força bruta (*brute-force*). Se o seu servidor aceita autenticação via senha tradicional, a segurança de toda a sua infraestrutura passa a depender unicamente da complexidade dessa senha.</p>
+
+        <p>A substituição do acesso por senha pela <strong>autenticação por chave pública SSH</strong> é o passo elementar na rotina de *hardening* (endurecimento de segurança) em qualquer ambiente de produção Linux. Neste guia prático, você aprenderá a gerar pares de chaves criptográficas, exportá-las com segurança e bloquear totalmente os acessos por senha sem correr o risco de perder a conexão com o servidor.</p>
+
+        <h2>Como Funciona a Criptografia Assimétrica do SSH</h2>
+        <p>A autenticação por chave SSH baseia-se em um par de chaves criptográficas assimétricas:</p>
+        <ul>
+          <li><strong>Chave Privada:</strong> Permanece armazenada na sua máquina local de trabalho. Ela é secreta e nunca deve ser enviada pela rede ou compartilhada.</li>
+          <li><strong>Chave Pública:</strong> É copiada para o servidor remoto no arquivo <code>~/.ssh/authorized_keys</code>. Qualquer pessoa pode ver a chave pública sem que isso comprometa a segurança.</li>
+        </ul>
+        <p>Quando você solicita a conexão, o servidor desafia sua máquina local usando a chave pública. A máquina local responde provando que possui a chave privada correspondente. Se a matemática criptográfica bater, a sessão é liberada sem que nenhuma senha trafegue pela rede.</p>
+
+        <h2>Passo 1: Gerando o Par de Chaves na Máquina Local</h2>
+        <p>Acesse o terminal do seu computador de trabalho (Linux ou macOS). Para máquinas Windows, utilize o PowerShell ou o WSL.</p>
+
+        <p>Atualmente, o algoritmo recomendado para geração de chaves é o <strong>Ed25519</strong>, por oferecer maior velocidade e segurança superior com chaves menores em comparação ao clássico RSA.</p>
+
+        <p>Execute o seguinte comando para gerar o par de chaves:</p>
+<pre><code>ssh-keygen -t ed25519 -C "seu_email@exemplo.com"</code></pre>
+
+        <p><em>Nota: Caso esteja interagindo com sistemas legados que não suportam Ed25519, utilize o algoritmo RSA com pelo menos 4096 bits:</em></p>
+<pre><code>ssh-keygen -t rsa -b 4096 -C "seu_email@exemplo.com"</code></pre>
+
+        <p>Durante a execução, o terminal exibirá duas perguntas:</p>
+        <ol>
+          <li><strong>Local para salvar a chave:</strong> Pressione <code>Enter</code> para aceitar o caminho padrão (geralmente <code>~/.ssh/id_ed25519</code>).</li>
+          <li><strong>Frase de segurança (Passphrase):</strong> Digite uma frase secreta. Ela funciona como uma senha para descriptografar sua chave privada local. Recomenda-se definir uma *passphrase* para evitar acessos não autorizados caso seu computador físico seja comprometido.</li>
+        </ol>
+
+        <!-- Anúncio AdSense Meio -->
+        <div class="adsense-unit">
+          [ Espaço reservado para anúncio do Google AdSense - Meio do Artigo ]
+        </div>
+
+        <h2>Passo 2: Copiando a Chave Pública para o Servidor Ubuntu</h2>
+        <p>Com o par de chaves criado localmente, precisamos enviar a chave pública para o servidor remoto. Existem duas maneiras de realizar esse procedimento:</p>
+
+        <h3>Método A: Utilizando o utilitário ssh-copy-id (Recomendado)</h3>
+        <p>O utilitário <code>ssh-copy-id</code> automatiza o processo de criação do diretório remoto e ajuste das permissões de arquivos. Substitua o usuário e o IP pelos dados do seu servidor:</p>
+<pre><code>ssh-copy-id usuario@ip_do_servidor</code></pre>
+
+        <p>O sistema solicitará a senha do usuário remoto pela última vez para instalar a chave pública. Ao término, você verá uma mensagem confirmando que a chave foi adicionada.</p>
+
+        <h3>Método B: Adição Manual via Terminal</h3>
+        <p>Se a ferramenta <code>ssh-copy-id</code> não estiver disponível no seu sistema local, você pode ler o conteúdo da sua chave pública e gravá-lo no arquivo do servidor via conexão SSH:</p>
+<pre><code>cat ~/.ssh/id_ed25519.pub | ssh usuario@ip_do_servidor "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"</code></pre>
+
+        <h2>Passo 3: Testando a Autenticação Sem Senha</h2>
+        <p>Antes de alterar qualquer configuração de segurança no servidor, abra uma **nova janela de terminal** na sua máquina local e tente conectar-se:</p>
+<pre><code>ssh usuario@ip_do_servidor</code></pre>
+
+        <p>Se você definiu uma *passphrase* no Passo 1, o sistema pedirá a frase da chave. Caso contrário, o login será efetuado instantaneamente sem solicitar a senha do usuário do Linux.</p>
+
+        <div class="alert-box">
+          <strong>Atenção Crítica:</strong> Não feche a janela de terminal original onde você já está logado como root ou sudo no servidor até concluir e validar o último passo deste guia.
+        </div>
+
+        <h2>Passo 4: Desativando o Login por Senha no Daemon do SSH</h2>
+        <p>Agora que a chave pública está funcionando perfeitamente, podemos alterar a configuração do OpenSSH para rejeitar qualquer tentativa de login que utilize senha tradicional.</p>
+
+        <p>Conectado ao servidor Ubuntu, abra o arquivo de configuração <code>sshd_config</code> utilizando o editor de sua preferência:</p>
+<pre><code>sudo nano /etc/ssh/sshd_config</code></pre>
+
+        <p>Localize as seguintes diretrizes dentro do arquivo (utilize `Ctrl + W` no editor Nano para buscar):</p>
+
+        <ol>
+          <li>Procure por <code>PasswordAuthentication</code>. Remova o caractere `#` do início da linha (se houver) e altere o valor para <code>no</code>:
+<pre><code>PasswordAuthentication no</code></pre>
+          </li>
+          <li>Certifique-se de que a diretriz <code>PubkeyAuthentication</code> esteja configurada como <code>yes</code>:
+<pre><code>PubkeyAuthentication yes</code></pre>
+          </li>
+          <li>(Opcional) Para evitar logins diretos como superusuário, configure a diretriz <code>PermitRootLogin</code> para proibir o acesso de root via senha:
+<pre><code>PermitRootLogin prohibit-password</code></pre>
+          </li>
+        </ol>
+
+        <p>Salve o arquivo (`Ctrl + O` e `Enter`) e saia do editor (`Ctrl + X`).</p>
+
+        <h2>Passo 5: Testando a Configuração e Reiniciando o Serviço</h2>
+        <p>Antes de reiniciar o serviço do SSH, valide se não foram introduzidos erros de sintaxe no arquivo de configuração:</p>
+
+<pre><code>sudo sshd -t</code></pre>
+
+        <p>Se o comando não retornar nenhuma saída no terminal, a sintaxe está correta. Reinicie o serviço do OpenSSH para aplicar as alterações:</p>
+
+<pre><code>sudo systemctl restart ssh</code></pre>
+
+        <div class="tip-box">
+          <strong>Dica de Ouro:</strong> Mantenha sua sessão atual aberta. Abra uma **terceira janela de terminal** local e tente fazer login. Para testar o bloqueio de senha, force uma tentativa informando um arquivo de chave inexistente:
+          <pre style="margin-top:0.5rem;"><code>ssh -o PubkeyAuthentication=no usuario@ip_do_servidor</code></pre>
+          A resposta esperada no terminal é o erro de acesso negado: <code>Permission denied (publickey)</code>.
+        </div>
+
+        <h2>Ajuste de Permissões no Servidor Linux</h2>
+        <p>Se após os passos acima a autenticação por chave falhar e solicitar a senha, o motivo mais comum é o incorreto ajuste de permissões da pasta <code>.ssh</code> no servidor. O SSH é rigoroso e recusa chaves se as permissões forem muito abertas.</p>
+
+        <p>No servidor, execute os comandos de correção de permissões no diretório do usuário:</p>
+
+<pre><code>chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+chown -R $USER:$USER ~/.ssh</code></pre>
+
+        <h2>Conclusão</h2>
+        <p>Com a autenticação por chave configurada e o login por senha desativado, seu servidor Ubuntu está protegido contra a imensa maioria das varreduras automatizadas que ocorrem na porta 22. O próximo passo recomendado na rotina de *hardening* é a instalação do <strong>Fail2ban</strong> para bloqueio de IP e a alteração da porta padrão do SSH.</p>
+      </article>
+    </main>
+
+    <!-- Sidebar -->
+    <aside>
+      <div class="widget">
+        <h3>Sobre o Autor</h3>
+        <p><strong>José Ronaldo</strong></p>
+        <p>Mais de 20 anos de experiência diária na administração de sistemas Linux, automação de infraestrutura e projetos de código aberto.</p>
+      </div>
+
+      <!-- Anúncio AdSense Sidebar -->
+      <div class="adsense-unit">
+        [ Anúncio Sidebar AdSense ]
+      </div>
+
+      <div class="widget">
+        <h3>Próximos Guias de Segurança</h3>
+        <ul>
+          <li><a href="/sysadmin/guia-firewall-ufw-linux.html">Guia Prático do Firewall UFW no Ubuntu</a></li>
+          <li><a href="/sysadmin/como-configurar-fail2ban-linux.html">Como Configurar o Fail2ban Contra Força Bruta</a></li>
+          <li><a href="/sysadmin/criar-servico-systemd-linux.html">Entendendo o Systemd e Criando Serviços</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="/sobre.html">Sobre Nós</a> |
+        <a href="/contato.html">Contato</a> |
+        <a href="/politica-de-privacidade.html">Política de Privacidade</a>
+      </div>
+      <p>&copy; 2026 GuiaSysAdmin. Todos os direitos reservados. Conteúdo focado em administração de sistemas Linux.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
